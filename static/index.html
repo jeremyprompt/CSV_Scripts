@@ -61,6 +61,14 @@
         <div id="validateOutput" class="output"></div>
     </div>
 
+    <!-- CSV Concatenator -->
+    <div class="function-container">
+        <h2>CSV Concatenator</h2>
+        <input type="file" id="csvConcatenator" accept=".csv" multiple>
+        <button onclick="concatenateCSVs()">Concatenate</button>
+        <div id="concatenateOutput" class="output"></div>
+    </div>
+
     <script>
         // CSV to JSON Converter
         async function convertCSVtoJSON() {
@@ -153,6 +161,45 @@
 
             document.getElementById('validateOutput').textContent = 
                 isValid ? 'CSV is valid!' : `CSV is invalid: ${errorMessage}`;
+        }
+
+        // CSV Concatenator
+        async function concatenateCSVs() {
+            const files = document.getElementById('csvConcatenator').files;
+            if (!files.length) {
+                alert('Please select CSV files to concatenate');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('csv_files', files[i]);
+                }
+
+                const response = await fetch('/concatenate', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Concatenation failed');
+                }
+
+                const result = await response.blob();
+                const url = window.URL.createObjectURL(result);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'concatenated.csv';
+                a.click();
+                window.URL.revokeObjectURL(url);
+
+                document.getElementById('concatenateOutput').textContent = 
+                    'Files successfully concatenated!';
+            } catch (error) {
+                document.getElementById('concatenateOutput').textContent = 
+                    `Error: ${error.message}`;
+            }
         }
     </script>
 </body>
