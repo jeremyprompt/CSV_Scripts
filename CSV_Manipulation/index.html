@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Manipulation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .function-container {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .output {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV Manipulation Tool</h1>
+
+    <!-- CSV to JSON Converter -->
+    <div class="function-container">
+        <h2>CSV to JSON Converter</h2>
+        <input type="file" id="csvFile" accept=".csv">
+        <button onclick="convertCSVtoJSON()">Convert</button>
+        <div id="jsonOutput" class="output"></div>
+    </div>
+
+    <!-- CSV Column Counter -->
+    <div class="function-container">
+        <h2>CSV Column Counter</h2>
+        <input type="file" id="columnCountFile" accept=".csv">
+        <button onclick="countColumns()">Count Columns</button>
+        <div id="columnCountOutput" class="output"></div>
+    </div>
+
+    <!-- CSV Row Counter -->
+    <div class="function-container">
+        <h2>CSV Row Counter</h2>
+        <input type="file" id="rowCountFile" accept=".csv">
+        <button onclick="countRows()">Count Rows</button>
+        <div id="rowCountOutput" class="output"></div>
+    </div>
+
+    <!-- CSV Validator -->
+    <div class="function-container">
+        <h2>CSV Validator</h2>
+        <input type="file" id="validateFile" accept=".csv">
+        <button onclick="validateCSV()">Validate</button>
+        <div id="validateOutput" class="output"></div>
+    </div>
+
+    <script>
+        // CSV to JSON Converter
+        async function convertCSVtoJSON() {
+            const file = document.getElementById('csvFile').files[0];
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const text = await file.text();
+            const lines = text.split('\n');
+            const headers = lines[0].split(',').map(header => header.trim());
+            const result = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                const obj = {};
+                const currentLine = lines[i].split(',');
+                
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = currentLine[j]?.trim() || '';
+                }
+                result.push(obj);
+            }
+
+            document.getElementById('jsonOutput').textContent = 
+                JSON.stringify(result, null, 2);
+        }
+
+        // CSV Column Counter
+        async function countColumns() {
+            const file = document.getElementById('columnCountFile').files[0];
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const text = await file.text();
+            const firstLine = text.split('\n')[0];
+            const columnCount = firstLine.split(',').length;
+
+            document.getElementById('columnCountOutput').textContent = 
+                `Number of columns: ${columnCount}`;
+        }
+
+        // CSV Row Counter
+        async function countRows() {
+            const file = document.getElementById('rowCountFile').files[0];
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const text = await file.text();
+            const rows = text.split('\n').filter(line => line.trim() !== '').length;
+
+            document.getElementById('rowCountOutput').textContent = 
+                `Number of rows: ${rows}`;
+        }
+
+        // CSV Validator
+        async function validateCSV() {
+            const file = document.getElementById('validateFile').files[0];
+            if (!file) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const text = await file.text();
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const headers = lines[0].split(',').length;
+            let isValid = true;
+            let errorMessage = '';
+
+            // Check if file is empty
+            if (lines.length === 0) {
+                isValid = false;
+                errorMessage = 'File is empty';
+            }
+
+            // Check if all rows have the same number of columns
+            for (let i = 1; i < lines.length; i++) {
+                const columns = lines[i].split(',').length;
+                if (columns !== headers) {
+                    isValid = false;
+                    errorMessage = `Row ${i + 1} has ${columns} columns, expected ${headers}`;
+                    break;
+                }
+            }
+
+            document.getElementById('validateOutput').textContent = 
+                isValid ? 'CSV is valid!' : `CSV is invalid: ${errorMessage}`;
+        }
+    </script>
+</body>
+</html> 
