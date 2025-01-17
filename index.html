@@ -180,14 +180,42 @@
                     })
                 );
 
-                // Get headers from first file
-                const headers = csvContents[0][0];
-                let concatenated = [headers];
+                // Collect all unique headers from all files
+                const allHeaders = new Set();
+                csvContents.forEach(content => {
+                    const headers = content[0].split(',').map(header => header.trim());
+                    headers.forEach(header => allHeaders.add(header));
+                });
+                const headerArray = Array.from(allHeaders);
 
-                // Concatenate all files (skipping headers for subsequent files)
-                csvContents.forEach((content, index) => {
-                    const rows = index === 0 ? content.slice(1) : content.slice(1);
-                    concatenated = concatenated.concat(rows);
+                // Start with combined headers
+                let concatenated = [headerArray.join(',')];
+
+                // Process each file
+                csvContents.forEach(content => {
+                    const fileHeaders = content[0].split(',').map(header => header.trim());
+                    
+                    // Create a map of header positions in this file
+                    const headerPositions = {};
+                    fileHeaders.forEach((header, index) => {
+                        headerPositions[header] = index;
+                    });
+
+                    // Process each data row
+                    for (let i = 1; i < content.length; i++) {
+                        const currentLine = content[i].split(',').map(val => val.trim());
+                        const newRow = new Array(headerArray.length).fill(''); // Initialize with empty strings
+
+                        // Fill in values where they exist
+                        headerArray.forEach((header, newIndex) => {
+                            const oldIndex = headerPositions[header];
+                            if (oldIndex !== undefined && currentLine[oldIndex]) {
+                                newRow[newIndex] = currentLine[oldIndex];
+                            }
+                        });
+
+                        concatenated.push(newRow.join(','));
+                    }
                 });
 
                 // Create and download the concatenated CSV
